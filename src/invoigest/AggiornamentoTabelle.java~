@@ -1,0 +1,175 @@
+package universaldatabase;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Query;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ * @author Parziale Alberto, Pistolesi Andrea, Zhang Jian
+ * @version 2.0
+ * 
+ * La classe AggiornamentoTabelle contiene dei metodi statici 
+ * che estraggono dati, effettuano aggiornamenti e controlli nelle Jtable 
+ */
+
+public class AggiornamentoTabelle {
+    
+/**
+ * Il metodo datiModifica() prende i dati della riga selezionata nella 
+ *  jTable che viene passata al metodo e li inserisce nelle varie jTextField
+ *  della jInternaframe1, per poterli opportunamente modificare.
+ * 
+ * @param jTable
+ * @return tramite il cast ho un Arraylist di stringhe con i dati della
+ *         riga selezionata
+ */
+    public static ArrayList datiModifica(javax.swing.JTable jTable){
+        // creo un ArrayList
+        ArrayList<Object> value=new ArrayList<Object>();
+        // Salvo il numero della riga selezionata
+        int indiceRiga = jTable.getSelectedRow();
+        // Riempio l'ArrayList value di Object
+        for(int i = 0; i<jTable.getColumnCount();i++){
+            Object cellValue = jTable.getValueAt(indiceRiga, i);
+            value.add(cellValue);
+        }
+        // creo un altro ArrayList
+        ArrayList<String> valori=new ArrayList<String>();
+        // riempio l'ArrayList di Stringhe
+        for(int i =0;i<value.size();i++){
+            // Eseguo il cast da Object a String */
+            String valore =(value.get(i).toString());
+            valori.add(valore);
+        }
+        return valori;
+    }
+  
+/**
+ * Il metodo risultatoRicerca() ci consente di ottenere  
+ * il risultato della query nell'istanza della classe DefaultTableModel 
+ *
+ * @param q è la query
+ * @param categoria
+ * @return l'oggetto model contenente il risultato della query
+ */
+   
+    public static DefaultTableModel risultatoRicerca(Query q,String categoria){
+        // creo un'istanza della classe DefaultTableModel
+        DefaultTableModel model = new DefaultTableModel(0, 6);
+        // recupero la lista ocn il risultato della query
+        List l=q.getResultList();
+        // controlla su quale tabella è stata eseguita la query
+        if(categoria.contains("Libri")){
+            // 
+            for(Object o : l) {
+                Libri p = (Libri)o;
+                String[] data= {String.valueOf(p.getIDLibro()), p.getTitolo(), p.getAutore(),p.getCasa(),p.getAnno(),p.getGenere()};
+                model.addRow(data);
+            }
+        }
+        else if(categoria.contains("Musica")){
+            for(Object o : l) {
+                Musica p = (Musica)o;
+                String[] data= {String.valueOf(p.getIDMusica()), p.getTitolo(), p.getAutore(),p.getCasa(),p.getAnno(),p.getGenere()};
+                model.addRow(data);
+            }
+        }
+        else if(categoria.contains("Video")){
+            for(Object o : l) {
+                Video p = (Video)o;
+                String[] data= {String.valueOf(p.getIDVideo()), p.getTitolo(), p.getAutore(),p.getCasa(),p.getAnno(),p.getGenere()};
+                model.addRow(data);
+            }
+        }
+        return model;
+    }
+/**
+ * Il metodo aggiornaNomeColonne() setta i nomi delle colonne alla jTable
+ * passata come parametro e setta il nome della colonna degli ID in base alla
+ * categoria su cui si sta operando
+ * 
+ * 
+ * @param jTable     è la jTable su cui verranno settati i nomi delle colonne
+ * @param categoria  è la categoria su cui si sta lavorando
+ */
+
+    public static void aggiornaNomeColonne(javax.swing.JTable jTable,String categoria){
+        //
+        jTable.getColumnModel().getColumn(0).setHeaderValue("ID"+categoria);
+        jTable.getColumnModel().getColumn(1).setHeaderValue("Titolo");
+        jTable.getColumnModel().getColumn(2).setHeaderValue("Autore");
+        jTable.getColumnModel().getColumn(3).setHeaderValue("Casa di Produzione");
+        jTable.getColumnModel().getColumn(4).setHeaderValue("Anno di Pubblicazione");
+        jTable.getColumnModel().getColumn(5).setHeaderValue("Genere");
+    }
+/**Il metodo controlloDati() esamina le variabili String passate come parametri.
+ *
+ * @param titolo
+ * @param autore
+ * @param anno
+ * @param casa
+ * @param genere
+ * @param controllo  è la variabile boolean che ci viene restituita dal metodo
+ * @return la variabile boolean controllo.Quest'ultima sarà true se tutte le
+ *         variabili String saranno vuote,altrimenti sarà false.
+ */
+    public static boolean controlloDati(String titolo,String autore,String anno,String casa,String genere){
+        boolean controllo=false;
+        if(titolo.isEmpty()){
+            if(autore.isEmpty()){
+                if(anno.isEmpty()){
+                    if(casa.isEmpty()){
+                        if(genere.isEmpty()){
+                            controllo=true;
+                        }
+                    }
+                }
+            }
+        }else{
+            controllo=false;
+        }
+        return controllo;
+     }
+ /**Il metodo statico numeroID() ci consente di ottenere il max numero contenuto
+  * nella colonna ID della tabella data dalla variabile categoria
+  *
+  * @param categoriaId è la stringa che ci permette di scegliere la colonna degli ID
+  * @param categoria   rappresenta la tabella del database su cui stiamo lavorando
+  * @param universaldbPUEntityManager è l'entity mananger
+  * @param id   è il numero cercato
+  * @return la variabile int id contenente il numero più alto
+  */
+     public static int numeroID(String categoriaId,String categoria,javax.persistence.EntityManager universaldbPUEntityManager ){
+        String namedQuery="SELECT MAX(ID_"+categoriaId+")FROM "+categoria+";";
+        Query q= universaldbPUEntityManager.createNativeQuery(namedQuery);
+        String risultato=String.valueOf(q.getSingleResult());
+        String substri = risultato.substring(1, risultato.length()-1);
+        int id=Integer.parseInt(substri);
+        return id;
+     }
+     /**
+      * Il metodo statico controlloTabella() ci consente di ottenere la tabella
+      * in base alla cateogria selezionata
+      * @param categoria rappresenta la tabella del database su cui stiamo lavorando
+      * @param jTable1 un'istanza della classe jTable
+      * @param jTable2 un'istanza della classe jTable
+      * @param jTable3 un'istanza della classe jTable
+      * @return table4 restituisce la tabella in cui vengono effettuate le opreazioni
+      *         in base alla categoria
+      */
+     public static JTable controlloTabella(String categoria,JTable jTable1,JTable jTable2,JTable jTable3){
+        JTable table4 = new JTable();
+        if(categoria.contains("Musica")){
+            table4 = jTable2;
+        }
+        else if(categoria.contains("Video")){
+            table4 = jTable3;
+        }
+        else if(categoria.contains("Libri")){
+            table4 = jTable1;
+        }
+        return table4;
+     }
+}
